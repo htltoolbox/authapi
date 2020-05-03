@@ -1,7 +1,9 @@
 <?php
+header('Content-Type: application/json');
+error_reporting(E_ALL ^ E_NOTICE);  
 
 $api_key = $_GET['api_key'];
-$userId = $_GET['userId'];
+$email = $_GET['email'];
 $password = $_GET['password'];
 
 if(!isset($api_key)){
@@ -17,7 +19,7 @@ if(!isset($api_key)){
 
 else{
 
-    include $_SERVER['DOCUMENT_ROOT'] . '/v1/include/init.php';
+    include $_SERVER['DOCUMENT_ROOT'] . '/include/init.php';
 
     $q = $conn->query("SELECT `date_generated` FROM api_keys WHERE api_key = '$api_key' AND permission >= 2");
 
@@ -40,11 +42,11 @@ else{
         $conn->query("UPDATE api_keys SET is_valid = 0 WHERE api_key = '$api_key'");
     }
 
-    if(!isset($userId)){
+    if(!isset($email)){
         echo json_encode(
             array(
                 'code' => 403,
-                'message' => 'user_id is requiered'
+                'message' => 'email is requiered'
             )
         );
 
@@ -62,7 +64,7 @@ else{
         die();
     }
 
-    $q = $conn->query("SELECT hash FROM finaluser WHERE userId = $userId");
+    $q = $conn->query("SELECT hash FROM finaluser WHERE email = '$email'");
 
     if($q->num_rows == 0){
         echo json_encode(
@@ -72,18 +74,38 @@ else{
             )
         );  
     }
+    else{
 
-    $user = $q->fetch_object();
+        $user = $q->fetch_object();
 
-    if(password_verify($password,$user->hash)){
-        echo "passwords match";
+        if(password_verify($password,$user->hash)){
 
-        $q = $conn->query("UPDATE fianlusers WHERE userId = $userId SET api_key= ."hash("sha256",rand()));
+            $token = hash("sha256",rand());
+
+            $q = $conn->query("UPDATE finaluser SET api_key='$token' WHERE email = '$email'");
+            
+            if(!$q){
+                array(
+                    'code' => 503,
+                    'message' => 'Database Error'
+                );
+            }
+            else{
+                echo json_encode(
+                    array(
+                        'code' => 200,
+                        'token' => $token
+                    )
+                );  
+            }
+        }
+        else{
+            echo json_encode(
+                array(
+                    'code' => 403,
+                    'message' => 'Password Invalid'
+                )
+            ); 
+        }
     }
-
-    
-
-    
-
-
 }

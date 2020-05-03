@@ -17,7 +17,7 @@
 
     else{
 
-        include $_SERVER['DOCUMENT_ROOT'] . '/v1/include/init.php';
+        include $_SERVER['DOCUMENT_ROOT'] . '/include/init.php';
 
         $q = $conn->query("SELECT date_generated FROM api_keys WHERE api_key = '$api_key' AND is_valid = 1");
 
