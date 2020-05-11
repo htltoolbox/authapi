@@ -1,5 +1,7 @@
 <?php
 
+    
+
     $user_id = $_GET['user_id'];
     $api_key = $_GET['api_key'];
     $fields = $_GET['fields'];
@@ -108,15 +110,12 @@
             
 
         }
-
+        
         print_r(
             json_encode(
                 $user
             )
         );
-
-
-
     }
 
 ?>
