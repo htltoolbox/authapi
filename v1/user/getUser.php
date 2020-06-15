@@ -24,6 +24,7 @@ $stmt = mysqli_stmt_init($conn);
 
 if(!mysqli_stmt_prepare($stmt, $SQL)){
     echo "SQL-Error: binding of parameters failed";
+    die();
 }else{
     mysqli_stmt_bind_param($stmt, "s", $token);
 
