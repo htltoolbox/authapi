@@ -1,10 +1,10 @@
 <?php
+header('Content-Type: application/json');
+error_reporting(E_ALL ^ E_NOTICE);  
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/v1/include/header.php';
 
-$token = $_SESSION['user_token'];
-echo '<br>';
-echo 'Token= ' . $token;
+$token = htmlspecialchars($_SESSION['user_token']);
 
 if(!isset($token)){
     echo json_encode(
@@ -18,34 +18,36 @@ if(!isset($token)){
 
 include $_SERVER['DOCUMENT_ROOT'] . '/v1/include/init.php';
 
-echo '<br>';
-echo 'initialized Database Connection';
+$SQL = "SELECT * FROM finaluser WHERE api_key = ?;";
+$stmt = mysqli_stmt_init($conn);
+    
 
-try{
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $stmt = $conn->prepare("SELECT * FROM finaluser WHERE api_key = ?");
-    $stmt->bind_param("s", $token);
-    $stmt->execute();
+if(!mysqli_stmt_prepare($stmt, $SQL)){
+    echo "SQL-Error: binding of parameters failed";
+}else{
+    mysqli_stmt_bind_param($stmt, "s", $token);
 
-    $result = $stmt->setFetchMode(PDO::FETCH_ASSOC);
-    $result = $stmt->fetch_row();
-} catch (PDOException $e){
-    echo "Error: " . $e->getMessage();
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+
+    $row = mysqli_fetch_object($result);
+
+    echo json_encode(
+        array(
+            'code' => 200,
+            'userId' => $row->userId,
+            'email' => $row->email,
+            'vorname' => $row->vorname,
+            'nachname' => $row->nachname,
+            'klasse' => $row->klasse,
+            'rechte' => $row->rechte,
+            'aktiv' => $row->aktiev
+        )
+    );
+    
 }
 
-echo json_encode(
-    array(
-        'code' => 200,
-        'userId' => $result->userId,
-        'email' => $result->email,
-        'vorname' => $result->vorname,
-        'nachname' => $result->nachname,
-        'klasse' => $result->klasse,
-        'rechte' => $result->rechte,
-        'aktiv' => $result->aktiev
-    )
-);
-
-$stmt->close();
+$conn->close();
     
 ?>
