@@ -64,19 +64,33 @@ else{
         die();
     }
 
-    $q = $conn->query("SELECT hash FROM finaluser WHERE email = '$email'");
+    //SQL Statement
+    $SQL = "SELECT hash FROM finaluser WHERE email = ?;";
+    // Generate Statement Object from the Connection Obeject
+    $stmt = mysqli_stmt_init($conn);
 
-    if($q->num_rows == 0){
+    if(!mysqli_stmt_prepare($stmt, $SQL)){
+        echo "SQL-Error: binding of parameters failed";
+        die();
+    }else{
+        mysqli_stmt_bind_param($stmt, "s", $email);
+    
+        mysqli_stmt_execute($stmt);
+    }
+
+    if(mysqli_stmt_num_rows($stmt) < 0){
         echo json_encode(
             array(
                 'code' => 404,
                 'message' => 'user does not exist'
             )
         );  
+        die();
     }
     else{
+        $result = mysqli_stmt_get_result($stmt);
 
-        $user = $q->fetch_object();
+        $user = mysqli_fetch_object($result);
 
         if(password_verify($password,$user->hash)){
 
